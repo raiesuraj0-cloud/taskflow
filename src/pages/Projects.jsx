@@ -1,0 +1,16 @@
+import { useState } from 'react'
+import { Plus, MoreHorizontal, CalendarDays, CheckCircle2 } from 'lucide-react'
+import { useTaskFlow } from '../context/TaskFlowContext'
+import { Modal, ConfirmDialog } from '../components/Modal'
+import { ProjectForm } from '../components/Forms'
+
+export default function Projects() {
+  const {projects,tasks,addProject,updateProject,deleteProject}=useTaskFlow(); const [formOpen,setFormOpen]=useState(false); const [editing,setEditing]=useState(null); const [remove,setRemove]=useState(null)
+  return <div className="page"><div className="page-heading"><div><p className="eyebrow">Workspace</p><h1>Projects</h1><p className="mt-1 text-sm text-slate-500">Organize work and track project progress.</p></div><button className="btn-primary" onClick={()=>{setEditing(null);setFormOpen(true)}}><Plus size={17}/>New project</button></div>
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{projects.map(p=>{const pt=tasks.filter(t=>t.projectId===p.id);const done=pt.filter(t=>t.status==='Completed').length;const progress=pt.length?Math.round(done/pt.length*100):0;return <div key={p.id} className="project-card"><div className="flex items-start justify-between"><div className="h-11 w-11 rounded-xl" style={{background:p.color}}/><div className="relative flex gap-1"><button className="icon-btn" onClick={()=>{setEditing(p);setFormOpen(true)}} aria-label="Edit project"><MoreHorizontal size={18}/></button><button className="icon-btn text-slate-400 hover:text-rose-600" onClick={()=>setRemove(p)} aria-label="Delete project">×</button></div></div><h2 className="mt-5 text-lg font-bold text-slate-900">{p.name}</h2><p className="mt-2 min-h-10 text-sm leading-5 text-slate-500">{p.description||'No description added.'}</p><div className="mt-5"><div className="mb-2 flex items-center justify-between text-xs"><span className="font-semibold text-slate-600">Progress</span><span className="font-bold text-slate-800">{progress}%</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full transition-all" style={{width:`${progress}%`,background:p.color}}/></div></div><div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500"><span className="flex items-center gap-1.5"><CheckCircle2 size={14}/>{done}/{pt.length} tasks</span><span className="flex items-center gap-1.5"><CalendarDays size={14}/>{p.deadline||'No deadline'}</span></div></div>})}</div>
+    {!projects.length&&<div className="empty-state panel"><FolderIcon/><h3>No projects yet</h3><p>Create a project to organize your tasks.</p></div>}
+    <Modal open={formOpen} title={editing?'Edit project':'Create project'} onClose={()=>setFormOpen(false)}><ProjectForm project={editing} onCancel={()=>setFormOpen(false)} onSubmit={values=>{editing?updateProject(editing.id,values):addProject(values);setFormOpen(false)}}/></Modal>
+    <ConfirmDialog open={!!remove} title="Delete project" message={`Delete “${remove?.name}”? Its tasks will be kept and moved out of the project.`} onClose={()=>setRemove(null)} onConfirm={()=>deleteProject(remove.id)}/>
+  </div>
+}
+function FolderIcon(){return <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-indigo-50 text-indigo-600"><Plus size={20}/></div>}
